@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hamro PDF</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+
+  <body class="bg-gray-50">
+    <nav class="bg-white shadow-md">
+      <div class="flex justify-between items-center max-w-[1600px] mx-auto px-6 py-3">
+        <a href="/" class="text-red-800 text-4xl font-bold">Hamro PDF</a>
+
+        <div class="hidden md:flex gap-10 font-semibold text-base">
+          <a href="#" class="hover:text-red-400">MERGE PDF</a>
+          <a href="#" class="hover:text-red-400">SPLIT PDF</a>
+          <a href="#" class="hover:text-red-400">COMPRESS PDF</a>
+          <a href="#" class="hover:text-red-400">CONVERT PDF</a>
+        </div>
+
+        <div class="flex items-center gap-3 font-medium">
+          <a href="#" class="px-2 py-1 hover:text-red-400">Login</a>
+          <a href="#" class="text-white bg-red-400 hover:bg-red-500 px-3 py-1 rounded">Signup</a>
+        </div>
+      </div>
+    </nav>
+
+    <main id="dropZone" class="py-4 mt-7 text-center min-h-[400px]">
+      <h1 class="text-5xl font-semibold">PDF to WORD Converter</h1>
+      <p class="mt-5 text-2xl font-light">Convert your PDF to WORD documents with incredible accuracy.</p>
+
+      <div class="mt-10 flex justify-center">
+        <input type="file" accept=".pdf" id="fileInput" class="hidden" />
+        <button id="selectBtn" class="bg-red-500 hover:bg-red-600 text-white text-2xl font-semibold px-16 py-6 rounded-xl shadow-lg">Select PDF file</button>
+      </div>
+
+      <p id="dropText" class="mt-4 text-gray-600">or drop PDF here</p>
+      <p id="fileName" class="mt-2 text-lg font-semibold text-red-800"></p>
+      <button id="convertBtn" class="hidden mt-6 bg-red-500 hover:bg-red-600 text-white text-xl font-semibold px-10 py-3 rounded-lg shadow">Convert to WORD</button>
+      <p id="status" class="mt-4 text-gray-600"></p>
+    </main>
+
+<script>
+const btn = document.getElementById("selectBtn");
+const input = document.getElementById("fileInput");
+const dropZone = document.getElementById("dropZone");
+const fileName = document.getElementById("fileName");
+const convertBtn = document.getElementById("convertBtn");
+const statusText = document.getElementById("status");
+let selectedFile = null;
+      
+      // File line ra naam dekhaune function
+      function handleFile(file) {
+        if (!file) return
+      
+        if (file.type !== 'application/pdf') {
+          fileName.textContent = 'Please select a PDF file only.'
+          convertBtn.classList.add('hidden')
+          selectedFile = null
+          return
+        }
+      
+        selectedFile = file
+        fileName.textContent = 'Selected: ' + file.name
+        convertBtn.classList.remove('hidden')
+        statusText.textContent = ''
+      }
+      // Button thichda picker kholne
+      btn.addEventListener('click', () => {
+        input.click()
+      })
+      
+      // Picker bata file chhanda
+      input.addEventListener('change', () => {
+        handleFile(input.files[0])
+      })
+      
+      // Drag and drop
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault()
+        dropZone.classList.add('bg-red-50')
+      })
+      
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('bg-red-50')
+      })
+      
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault()
+        dropZone.classList.remove('bg-red-50')
+        handleFile(e.dataTransfer.files[0])
+      })
+      
+      // After backend hai
+      
+      convertBtn.addEventListener('click', async () => {
+        if (!selectedFile) return
+      
+        const formData = new FormData()
+        formData.append('file', selectedFile)
+        statusText.textContent = 'Converting........'
+        convertBtn.disabled = true
+      
+        try {
+          const response = await fetch('/convert', {
+            method: 'POST',
+            body: formData
+          })
+      
+          if (!response.ok) {
+            const data = await response.json()
+            statusText.textContent = 'Error: ' + data.error
+            return
+          } 
+      
+          const blob = await response.blob()
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = selectedFile.name.replace('.pdf', '.docx')
+          a.click()
+      
+          URL.revokeObjectURL(url)
+          statusText.textContent = 'Done! Your file is downloaded successfully'
+        } 
+        catch (err) {
+          statusText.textContent = 'Something went wrong. Try again.'
+        }
+        finally {
+          convertBtn.disabled = false
+        }
+      })
+    </script>
+  </body>
+</html>
