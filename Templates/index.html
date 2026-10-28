@@ -38,6 +38,7 @@
       <p id="dropText" class="mt-4 text-gray-600">or drop PDF here</p>
       <p id="fileName" class="mt-2 text-lg font-semibold text-red-800"></p>
       <button id="convertBtn" class="hidden mt-6 bg-red-500 hover:bg-red-600 text-white text-xl font-semibold px-10 py-3 rounded-lg shadow">Convert to WORD</button>
+      <div id="spinner" class="hidden mx-auto mt-6 w-10 h-10 border-4 border-red-200 border-t-red-500 rounded-full animate-spin"></div>
       <p id="status" class="mt-4 text-gray-600"></p>
     </main>
 
@@ -48,24 +49,34 @@ const dropZone = document.getElementById("dropZone");
 const fileName = document.getElementById("fileName");
 const convertBtn = document.getElementById("convertBtn");
 const statusText = document.getElementById("status");
+const spinner = document.getElementById("spinner");
 let selectedFile = null;
       
-      // File line ra naam dekhaune function
-      function handleFile(file) {
-        if (!file) return
-      
-        if (file.type !== 'application/pdf') {
-          fileName.textContent = 'Please select a PDF file only.'
-          convertBtn.classList.add('hidden')
-          selectedFile = null
-          return
-        }
-      
-        selectedFile = file
-        fileName.textContent = 'Selected: ' + file.name
-        convertBtn.classList.remove('hidden')
-        statusText.textContent = ''
-      }
+// File line ra naam dekhaune function
+const MAX_SIZE = 20 * 1024 * 1024;
+
+function handleFile(file) {
+  if (!file) return
+
+  if (file.type !== 'application/pdf') {
+    fileName.textContent = 'Please select a PDF file only.'
+    convertBtn.classList.add('hidden')
+    selectedFile = null
+    return
+  }
+
+  if (file.size > MAX_SIZE) {
+    fileName.textContent = 'File is too large. Maximum size is 20 MB.'
+    convertBtn.classList.add('hidden')
+    selectedFile = null
+    return
+  }
+
+  selectedFile = file
+  fileName.textContent = 'Selected: ' + file.name
+  convertBtn.classList.remove('hidden')
+  statusText.textContent = ''
+}
       // Button thichda picker kholne
       btn.addEventListener('click', () => {
         input.click()
@@ -101,6 +112,7 @@ let selectedFile = null;
         formData.append('file', selectedFile)
         statusText.textContent = 'Converting........'
         convertBtn.disabled = true
+        spinner.classList.remove("hidden");
       
         try {
           const response = await fetch('/convert', {
@@ -129,8 +141,11 @@ let selectedFile = null;
         }
         finally {
           convertBtn.disabled = false
+          spinner.classList.add("hidden");
         }
       })
+      // Frontend check le user lai turuntai bhancha (server samma pathaunu pardaina), backend check le safety dincha. 
     </script>
   </body>
 </html>
+
