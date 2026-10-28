@@ -10,32 +10,32 @@ from flask import Flask, render_template, request, send_file, jsonify
 from pdf2docx import Converter
 
 # ---------- App setup ----------
-mero_website = Flask(__name__)
+app = Flask(__name__)
 
 # User le pathayeko file temporary rakhne folder
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Maximum file size: 20 MB (bytes ma)
-mero_website.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
 
 
 # ---------- Routes ----------
 
 # Mul page: Hamro PDF ko HTML dekhaucha
-@mero_website.route("/")
+@app.route("/")
 def home():
     return render_template("index.html")
 
 
 # 20 MB bhanda thulo file aayo bhane yo chalcha
-@mero_website.errorhandler(413)
+@app.errorhandler(413)
 def file_too_large(e):
     return jsonify({"error": "File is too large. Maximum size is 20 MB."}), 413
 
 
 # PDF line ra Word ma convert garne route
-@mero_website.route("/convert", methods=["POST"])
+@app.route("/convert", methods=["POST"])
 def convert():
     # 1. Validation: file aayo ki, PDF ho ki
     if "file" not in request.files:
@@ -83,4 +83,4 @@ def convert():
 
 # ---------- Server chalaune ----------
 if __name__ == "__main__":
-    mero_website.run(debug=True)
+    app.run(debug=True)
